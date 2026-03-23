@@ -1,0 +1,175 @@
+#!/bin/sh
+# kb - local command knowledge base (POSIX sh)
+
+: "${KB_FILE:=$HOME/Documents/Cheat-Codes/bash_commands_kb.md}"
+export KB_FILE
+
+mkdir -p "$(dirname "$KB_FILE")" || exit 1
+[ -f "$KB_FILE" ] || : >"$KB_FILE"
+
+die() { printf '%s\n' "$*" >&2; exit 1; }
+
+help() {
+  cat <<'EOF'
+Usage: kb <subcommand> [args]
+
+Subcommands:
+  add "HEADER" [N]   Save last N commands (default 1) under HEADER
+  search             Select an entry and print the command to stdout
+  insert             (zsh only) Insert selected command into prompt buffer
+  grep TERM          Search KB file for TERM (prints matching lines)
+  help               Show this help
+
+Examples:
+  kb add "Adding cover art to mp3" 1
+  kb search
+  kb insert
+  kb grep ffmpeg
+EOF
+}
+
+list_headers() {
+  grep '^## ' "$KB_FILE"
+}
+
+cmd__add_stdin() {
+  header=$1
+  [ -n "$header" ] || die "Error: add requires HEADER"
+
+  cmd_list=$(cat)
+  [ -n "$cmd_list" ] || die "Error: no commands received on stdin"
+
+  {
+    printf '## %s\n' "$header"
+    printf '```sh\n'
+    printf '%s\n' "$cmd_list"
+    printf '```\n\n'
+  } >>"$KB_FILE" || die "Error: could not write to $KB_FILE"
+
+  printf 'Saved to %s\n' "$KB_FILE"
+}
+
+cmd__preview() {
+  kbfile=$1
+  hdr=$2
+
+  awk -v hdr="$hdr" '
+    $0 == hdr { in_section=1; in_code=0; next }
+    in_section {
+      if ($0 ~ /^```/) {
+        if (in_code == 0) { in_code=1; next }  # opening fence (```zsh / ```sh)
+        else { exit }                            # closing fence (```)
+      }
+      if (in_code == 1) print
+    }
+  ' "$kbfile"
+}
+
+extract_block() {
+  hdr=$1
+
+  awk -v hdr="$hdr" '
+    $0 == hdr { in_section=1; in_code=0; next }
+    in_section {
+      if ($0 ~ /^```/) {
+        if (in_code == 0) { in_code=1; next }
+        else { exit }
+      }
+      if (in_code == 1 && $0 !~ /^[[:space:]]*$/) print
+    }
+  ' "$KB_FILE"
+}
+
+get_last_commands() {
+  count=$1
+
+  # Prefer POSIX fc (history editor/listing) when available.
+  if command -v fc >/dev/null 2>&1; then
+    n=$((count + 1))
+    # Grab last (count+1) and keep first "count" lines to avoid often capturing the kb call itself.
+    fc -ln "-$n" 2>/dev/null | sed -n "1,${count}p"
+    return 0
+  fi
+
+  # Fallback: try 'history' if the current shell provides it.
+  if command -v history >/dev/null 2>&1; then
+    history 2>/dev/null | tail -n "$count" | sed 's/^[[:space:]]*[0-9][0-9]*[[:space:]]*//'
+    return 0
+  fi
+
+  return 1
+}
+
+cmd_add() {
+  header=$1
+  count=${2:-1}
+
+  [ -n "$header" ] || die "Error: add requires HEADER"
+  case "$count" in
+    ''|*[!0-9]*) die "Error: N must be a positive integer" ;;
+  esac
+
+  cmd_list=$(get_last_commands "$count") || die "Error: cannot read history (try running from an interactive shell)"
+  [ -n "$cmd_list" ] || die "Error: no commands captured from history"
+
+  {
+    printf '## %s\n' "$header"
+    printf '```sh\n'
+    printf '%s\n' "$cmd_list"
+    printf '```\n\n'
+  } >>"$KB_FILE" || die "Error: could not write to $KB_FILE"
+
+  printf 'Saved to %s\n' "$KB_FILE"
+}
+
+cmd_search() {
+  SELF=$(command -v kb 2>/dev/null || printf '%s' "$0")
+
+  selected=$(
+    list_headers | SHELL=/bin/sh fzf \
+      --height 50% \
+      --reverse \
+      --prompt='Knowledge Base Search > ' \
+      --preview-window='right:55%:wrap' \
+      --preview "$SELF __preview \"$KB_FILE\" {}"
+  ) || exit 1
+
+  extract_block "$selected"
+}
+
+cmd_insert() {
+  # POSIX-safe fallback is to print to stdout.
+  content=$(cmd_search) || exit 1
+
+  # zsh-only: push into the ZLE buffer
+  if [ -n "${ZSH_VERSION:-}" ] && command -v print >/dev/null 2>&1; then
+    print -z "$content"
+  else
+    printf '%s\n' "$content"
+  fi
+}
+
+cmd_grep() {
+  term=$1
+  [ -n "$term" ] || die "Error: grep requires TERM"
+  grep -in "$term" "$KB_FILE"
+}
+
+main() {
+  sub=${1:-search}
+  case "$sub" in
+  __preview) shift; cmd__preview "$@"; exit 0 ;;
+  __add_stdin) shift; cmd__add_stdin "$@"; exit 0 ;;
+  add) shift; cmd_add "$@" ;;
+  search) shift; cmd_search "$@" ;;
+  insert) shift; cmd_insert "$@" ;;
+  grep) shift; cmd_grep "$@" ;;
+  help|-h|--help) help ;;
+  *)
+    # Legacy: kb "Header" [N]
+    if [ $# -gt 0 ]; then cmd_add "$@"; else cmd_search; fi
+    ;;
+    esac
+}
+
+main "$@"

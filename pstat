@@ -1,0 +1,60 @@
+#!/bin/bash
+# Pretty Stat for macOS - Clean "File Card" View with Human Sizes
+
+# Helper function to convert bytes to human-readable format
+human_size() {
+    local bytes=$1
+    if [[ $bytes -lt 1024 ]]; then
+        echo "${bytes} B"
+    elif [[ $bytes -lt 1048576 ]]; then
+        echo "$(bc <<< "scale=2; $bytes/1024") KB"
+    elif [[ $bytes -lt 1073741824 ]]; then
+        echo "$(bc <<< "scale=2; $bytes/1048576") MB"
+    else
+        echo "$(bc <<< "scale=2; $bytes/1073741824") GB"
+    fi
+}
+
+for arg in "$@"; do
+    COLOR="\033[1;34m"
+    BOLD="\033[1m"
+    RESET="\033[0m"
+
+    echo -e "${COLOR}--------------------------------------------${RESET}"
+    echo -e "${BOLD}📂 INFO:${RESET} $arg"
+    echo -e "${COLOR}--------------------------------------------${RESET}"
+    
+    if [ -d "$arg" ]; then
+        # FOLDER SPECIFIC
+        /usr/bin/stat -f "Type:       %HT
+Permissions: %Sp (%Lp)
+Owner:       %Su/%Sg
+Created:     %SB
+Modified:    %Sm" "$arg"
+        
+        SIZE=$(du -sh "$arg" | cut -f1)
+        echo -e "Total Size:  $SIZE (Recursive)"
+    else
+        # FILE SPECIFIC
+        # Capture raw bytes first
+        RAW_BYTES=$(/usr/bin/stat -f "%z" "$arg")
+        H_SIZE=$(human_size $RAW_BYTES)
+
+        /usr/bin/stat -f "Type:       %HT
+Permissions: %Sp (%Lp)" "$arg"
+        echo -e "Size:        $H_SIZE ($RAW_BYTES bytes)"
+        /usr/bin/stat -f "Owner:       %Su/%Sg
+Created:     %SB
+Modified:    %Sm
+Accessed:    %Sa" "$arg"
+        
+        # Media metadata check
+        ext="${arg##*.}"
+        if [[ "$ext" =~ ^(png|jpg|jpeg|mp4|mov|pdf)$ ]]; then
+            echo -e "\033[1;32m--------------------------------------------${RESET}"
+            echo -e "${BOLD}💿 MEDIA METADATA:${RESET}"
+            mdls -name kMDItemPixelWidth -name kMDItemPixelHeight -name kMDItemDuration "$arg" 2>/dev/null
+        fi
+    fi
+    echo -e "${COLOR}--------------------------------------------${RESET}"
+done
