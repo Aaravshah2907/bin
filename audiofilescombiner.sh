@@ -2,11 +2,7 @@
 
 # --- 0. Handle Help Flag ---
 if [[ "$1" == "-h" ]]; then
-    echo "--- HELP MENU: $(basename "$0") ---"
-    echo "Usage: $(basename "$0") [paths...]"
-    echo ""
-    echo "Description: This script processes selected files or folders."
-    echo "Arguments: Accepts multiple absolute paths from Yazi."
+    echo "Usage: $0 /path/to/folder"
     exit 0
 fi
 
@@ -46,30 +42,57 @@ COVER_IMAGE=$(ls | grep -Ei "\.(jpg|jpeg|png)$" | head -n 1)
 # --- 4. GENERATE LIST AND CHAPTER METADATA ---
 echo "📝 Calculating chapter timings..."
 rm -f "$LIST_FILE" "$META_FILE"
-echo ";FFMETADATA1" > "$META_FILE"
-echo "title=$TITLE_INPUT" >> "$META_FILE"
-echo "album=$ALBUM_NAME" >> "$META_FILE"
-echo "artist=$AUTHOR_NAME" >> "$META_FILE"
-# Adding Genre for better Apple Books sorting
-echo "genre=Audiobook" >> "$META_FILE"
+
+# Create metadata header
+cat <<EOF > "$META_FILE"
+;FFMETADATA1
+title=$TITLE_INPUT
+album=$ALBUM_NAME
+artist=$AUTHOR_NAME
+genre=Audiobook
+EOF
+
+# Use a standard Bash glob. 
+# We nullglob manually to avoid the loop running on a literal "*.mp3" string
+shopt -s nullglob
+files=( *.[mM][pP]3 )
+shopt -u nullglob
+
+if [ ${#files[@]} -eq 0 ]; then
+    echo "❌ No MP3 files found in $TARGET_DIR"
+    exit 1
+fi
 
 CURRENT_TIME=0
-for f in $(ls *.[mM][pP]3 | sort -V); do
-    echo "file '$f'" >> "$LIST_FILE"
+
+# Sort the array numerically/version-style
+# We pipe the null-terminated list to sort -z to handle spaces/special chars
+IFS=$'\n' sorted_files=($(printf "%s\n" "${files[@]}" | sort -V))
+unset IFS
+
+for f in "${sorted_files[@]}"; do
+    # Escape single quotes for ffmpeg's concat list.txt
+    # Example: Shallan's Theme -> Shallan'\''s Theme
+    escaped_f=$(echo "$f" | sed "s/'/'\\\\''/g")
+    echo "file '$escaped_f'" >> "$LIST_FILE"
     
+    # Get duration - quotes around "$f" are critical for those pipes | and spaces
     DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$f")
     
     START_MS=$(echo "($CURRENT_TIME * 1000) / 1" | bc)
     END_TIME=$(echo "$CURRENT_TIME + $DURATION" | bc)
     END_MS=$(echo "($END_TIME * 1000) / 1" | bc)
     
-    # Format chapter title nicely (no underscores)
-    CHAP_TITLE=$(basename "$f" .mp3 | tr '_' ' ')
-    echo "[CHAPTER]" >> "$META_FILE"
-    echo "TIMEBASE=1/1000" >> "$META_FILE"
-    echo "START=$START_MS" >> "$META_FILE"
-    echo "END=$END_MS" >> "$META_FILE"
-    echo "title=$CHAP_TITLE" >> "$META_FILE"
+    # Chapter title: remove extension and swap underscores for spaces
+    CHAP_TITLE=$(basename "$f" | sed 's/\.[^.]*$//' | tr '_' ' ')
+    
+    cat <<EOF >> "$META_FILE"
+[CHAPTER]
+TIMEBASE=1/1000
+START=$START_MS
+END=$END_MS
+title=$CHAP_TITLE
+EOF
     
     CURRENT_TIME=$END_TIME
 done
