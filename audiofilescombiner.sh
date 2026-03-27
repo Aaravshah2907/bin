@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# --- 0. Handle Help Flag ---
+if [[ "$1" == "-h" ]]; then
+    echo "--- HELP MENU: $(basename "$0") ---"
+    echo "Usage: $(basename "$0") [paths...]"
+    echo ""
+    echo "Description: This script processes selected files or folders."
+    echo "Arguments: Accepts multiple absolute paths from Yazi."
+    exit 0
+fi
+
 # --- 1. SETUP & INPUTS ---
 if [ -z "$1" ]; then
     echo "Usage: $0 /path/to/folder"
