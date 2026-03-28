@@ -1,4 +1,23 @@
 #!/bin/bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [DIR]
+
+Description:
+    Accepts a dir and goes through all mp3 files in it and resizes cover to match Spotify's stupid rule.
+    
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
 
 # Check for required tools
 if ! command -v ffmpeg &> /dev/null || ! command -v exiftool &> /dev/null; then

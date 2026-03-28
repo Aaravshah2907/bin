@@ -1,4 +1,23 @@
 #!/bin/bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [DIR]
+
+Description:
+    Combines M4B files into a single file. Not preffered. Split into mp3 files and then combining is a better option.
+
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
 
 # Check if a directory was provided
 if [ -z "$1" ]; then

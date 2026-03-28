@@ -1,4 +1,23 @@
 #!/bin/bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [DIR]
+
+Description:
+    Accepts a Directory as input and applies the same metadata to all mp3 files in the directory.
+    
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
 
 # 1. Check if a directory was provided
 if [ -z "$1" ] || [ ! -d "$1" ]; then

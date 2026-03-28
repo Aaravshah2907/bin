@@ -1,4 +1,23 @@
 #!/bin/bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [DIR]
+
+Description:
+    Google Photos Takeout json and image/vid file combiner to match metadata.
+
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
 # Enhanced Google Photos JSON to EXIF merger for macOS
 # Requires: brew install exiftool jq
 

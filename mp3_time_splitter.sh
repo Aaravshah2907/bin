@@ -1,4 +1,23 @@
 #!/bin/bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [FILE...]
+
+Description:
+    Splitting MP3 files based on timestamps.
+
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
 
 # Dependency Check
 if ! command -v ffmpeg &> /dev/null || ! command -v ffprobe &> /dev/null; then

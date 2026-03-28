@@ -1,4 +1,23 @@
 #!/usr/bin/env bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [DIR]
+
+Description:
+    Google Photos Takeout Meta data combiner.
+
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
 # Embed Google Photos Takeout JSON metadata into media files (recursive)
 
 set -euo pipefail

@@ -1,4 +1,23 @@
 #!/bin/bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [M4B FILE]
+
+Description:
+    Accepts a M4B file and splits it based on chapter selection by user.
+    
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
 
 if [[ -z "$1" ]]; then
     echo "Usage: ./split_m4b.sh /path/to/file.m4b"
