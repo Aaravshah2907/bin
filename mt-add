@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DATA_DIR="$HOME/Documents/Personal/Tracker"
+LIB="$DATA_DIR/library.json"
+PROVIDERS="$HOME/.local/bin/providers"
+
+TYPE="tv"
+query=""
+TAG=""
+
+# --- Parse args ---
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --type)
+      TYPE="$2"
+      shift 2
+      ;;
+    --tag)
+      TAG="$2"
+      shift 2
+      ;;
+    *)
+      query+="$1 "
+      shift
+      ;;
+  esac
+done
+
+query=$(echo "$query" | xargs)
+
+if [ -z "$query" ]; then
+  echo "Usage: mt-add <title> [--type tv|anime|manga|novel|movie|book] [--tag <subtype>]"
+  exit 1
+fi
+
+# --- Ensure library ---
+mkdir -p "$DATA_DIR"
+if [ ! -s "$LIB" ] || ! jq empty "$LIB" >/dev/null 2>&1; then
+  echo '{ "media": [] }' > "$LIB"
+fi
+
+echo "Searching ($TYPE): $query"
+
+# --- Load provider ---
+case "$TYPE" in
+  tv)
+    source "$PROVIDERS/tvmaze.sh"
+    if ! entry=$(tvmaze_add "$query"); then
+        echo "No TV results found."
+        echo "Try specifying type:"
+  
+        TYPE=$(printf "tv\nmovie\nanime\nbook\n" | fzf --prompt="Select type: ")
+  
+        case "$TYPE" in
+            tv) source "$PROVIDERS/tvmaze.sh"; entry=$(tvmaze_add "$query") ;;
+            anime) source "$PROVIDERS/anilist.sh"; entry=$(anilist_add "$query" "${TAG:-anime}") ;;
+            manga) source "$PROVIDERS/anilist.sh"; entry=$(anilist_add "$query" "${TAG:-manga}") ;;
+            novel) source "$PROVIDERS/anilist.sh"; entry=$(anilist_add "$query" "${TAG:-novel}") ;;
+            movie) source "$PROVIDERS/tmdb.sh"; entry=$(tmdb_add "$query") ;;
+            book) source "$PROVIDERS/openlibrary.sh"; entry=$(openlibrary_add "$query") ;;
+        esac
+    fi
+    ;;
+  anime)
+    source "$PROVIDERS/anilist.sh"
+    # default to TAG or anime
+    subtype="${TAG:-anime}"
+    entry=$(anilist_add "$query" "$subtype")
+    ;;
+  manga)
+    source "$PROVIDERS/anilist.sh"
+    subtype="${TAG:-manga}"
+    entry=$(anilist_add "$query" "$subtype")
+    ;;
+  novel)
+    source "$PROVIDERS/anilist.sh"
+    subtype="${TAG:-novel}"
+    entry=$(anilist_add "$query" "$subtype")
+    ;;
+  movie)
+    source "$PROVIDERS/tmdb.sh"
+    entry=$(tmdb_add "$query")
+    ;;
+  book)
+    source "$PROVIDERS/openlibrary.sh"
+    entry=$(openlibrary_add "$query")
+    ;;
+  *)
+    echo "Unsupported type: $TYPE"
+    exit 1
+    ;;
+esac
+
+# --- Prevent duplicates ---
+id=$(echo "$entry" | jq -r '.id')
+
+if jq -e --arg id "$id" '.media[]? | select(.id == $id)' "$LIB" > /dev/null; then
+  echo "Already exists"
+  exit 0
+fi
+
+# --- Merge ---
+updated=$(jq --argjson entry "$entry" '
+  .media = (.media // []) + [$entry]
+' "$LIB")
+
+echo "$updated" > "$LIB"
+
+echo "Added: $(echo "$entry" | jq -r '.title')"
