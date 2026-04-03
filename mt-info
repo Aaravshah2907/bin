@@ -27,11 +27,6 @@ if [[ -z "$TMDB_TOKEN" ]]; then
 fi
 
 # -------------------------
-# TMDB Bearer token
-# -------------------------
-TMDB_TOKEN="YOUR_TMDB_ACCESS_TOKEN"
-
-# -------------------------
 # Functions to fetch data
 # -------------------------
 
