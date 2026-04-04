@@ -2,7 +2,7 @@
 # mt-info: Fetch media info for all library items and cache them
 # Refreshes pending.json at the start every run
 
-DATA_DIR="${DATA_DIR:-$HOME/Documents/Personal/Tracker}"
+DATA_DIR="$HOME/Documents/Personal/Tracker"
 LIBRARY="$DATA_DIR/library.json"
 CACHE_DIR="$DATA_DIR/cache"
 PENDING="$CACHE_DIR/pending.json"
@@ -50,7 +50,6 @@ fetch_anilist() {
         volumes
         genres
         description
-        idMal
         startDate { year month day }
         endDate { year month day }
         averageScore
@@ -110,34 +109,6 @@ fetch_book() {
     echo "Saved book $id to $file"
 }
 
-fetch_jikan() {
-    local mal_id="$1"
-    local type="${2:-anime}"
-    local file="$CACHE_DIR/$type/mal_${mal_id}.json"
-    
-    # Episodes only apply to anime
-    local ep_file="$CACHE_DIR/anime/mal_${mal_id}_episodes.json"
-
-    if [[ -f "$file" ]]; then
-        if [ "$type" = "manga" ] || [[ -f "$ep_file" ]]; then
-            echo "Jikan cache exists for MAL $type ID $mal_id, skipping."
-            return
-        fi
-    fi
-
-    echo "Fetching Jikan (MAL) $type enrichment for ID $mal_id..."
-    curl -s -L -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-        "https://api.jikan.moe/v4/${type}/${mal_id}/full" | jq . > "$file"
-    
-    sleep 1 # Respect Jikan rate limits
-    
-    if [ "$type" = "anime" ]; then
-        curl -s -L -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            "https://api.jikan.moe/v4/anime/${mal_id}/episodes" | jq . > "$ep_file"
-        sleep 1
-    fi
-}
-
 # -------------------------
 # MAIN SCRIPT
 # -------------------------
@@ -155,13 +126,7 @@ jq -c '.media[]' "$LIBRARY" | while read -r item; do
 
     # Determine cache file path
     case "$type" in
-        anime|manga) 
-            if [ "$provider" = "mal" ]; then
-                file="$CACHE_DIR/$type/mal_${id}.json"
-            else
-                file="$CACHE_DIR/$type/anilist_${id}.json"
-            fi
-            ;;
+        anime|manga) file="$CACHE_DIR/$type/anilist_${id}.json";;
         tv)          file="$CACHE_DIR/tv/tvmaze_${id}.json";;
         movie)       file="$CACHE_DIR/movie/tmdb_${id}.json";;
         book)        file="$CACHE_DIR/book/openlibrary_${id//:/_}.json"
@@ -184,22 +149,11 @@ echo "Pending list rebuilt: $PENDING"
 # Fetch pending items
 jq -c '.[]' "$PENDING" | while read -r item; do
     type=$(echo "$item" | jq -r '.type')
-    provider=$(echo "$item" | jq -r '.provider')
     id=$(echo "$item" | jq -r '.id')
 
     case "$type" in
         anime|manga)
-            if [ "$provider" = "mal" ]; then
-                fetch_jikan "$id" "$type"
-            else
-                fetch_anilist "$id" "$type"
-                if [ "$type" = "anime" ]; then
-                    id_mal=$(jq -r '.data.Media.idMal // empty' "$CACHE_DIR/anime/anilist_${id//[:\/]/_}.json" 2>/dev/null)
-                    if [ -n "$id_mal" ] && [ "$id_mal" != "null" ]; then
-                        fetch_jikan "$id_mal"
-                    fi
-                fi
-            fi
+            fetch_anilist "$id" "$type"
             ;;
         tv)
             fetch_tv "$id"

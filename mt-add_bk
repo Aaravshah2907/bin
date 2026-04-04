@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DATA_DIR="${DATA_DIR:-$HOME/Documents/Personal/Tracker}"
+DATA_DIR="$HOME/Documents/Personal/Tracker"
 LIB="$DATA_DIR/library.json"
 PROVIDERS="$HOME/.local/bin/providers"
 
@@ -49,15 +49,8 @@ case "$TYPE" in
     entry=$(tvmaze_add "$query")
     ;;
   anime)
-    echo "Select Anime Provider: (1) MyAnimeList [Default] (2) AniList"
-    read -r -p "Enter provider number: " prov_choice
-    if [ "$prov_choice" = "2" ]; then
-        source "$PROVIDERS/anilist.sh"
-        entry=$(anilist_add "$query" "anime" "$SUBTYPE")
-    else
-        source "$PROVIDERS/jikan.sh"
-        entry=$(jikan_add "$query" "anime")
-    fi
+    source "$PROVIDERS/anilist.sh"
+    entry=$(anilist_add "$query" "anime" "$SUBTYPE")
     ;;
   manga)
     source "$PROVIDERS/anilist.sh"

@@ -2,7 +2,7 @@
 # mt-cli: Enhanced Mega Worker for Tracker
 
 FILE_DIR="$HOME/.local/bin"
-DATA_DIR="${DATA_DIR:-$HOME/Documents/Personal/Tracker}"
+DATA_DIR="$HOME/Documents/Personal/Tracker"
 CACHE_DIR="$DATA_DIR/cache"
 PENDING="$CACHE_DIR/pending.json"
 
@@ -80,7 +80,7 @@ options=(
     "mt-info (Sync metadata & cache)"
     "mt-change (Change Metadata library)"
     "mt-update (Update progress)"
-    "mt-remove (Delete Item & Cache)"
+    "mt-remove (Clean cache)"
 )
 
 while true; do

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-DATA_DIR="${DATA_DIR:-$HOME/Documents/Personal/Tracker}"
+DATA_DIR="$HOME/Documents/Personal/Tracker"
 LIB="$DATA_DIR/library.json"
 
 TYPE=""
@@ -33,10 +33,10 @@ jq -r "
 $( [ -n "$TYPE" ] && echo "| select(.type == \"$TYPE\")" )
 $( [ -n "$STATUS" ] && echo "| select(.status == \"$STATUS\")" )
 | if .type == \"book\" then
-    \"[\(.id)] \(.title) by \(.metadata.author // \"Unknown\") [\(.type)] (\(.status))
+    \"\(.title) by \(.metadata.author // \"Unknown\") [\(.type)] (\(.status))
      → \(.progress.current)/\(.progress.total) \(.progress.unit)\"
   else
-    \"[\(.id)] \(.title) [\(.type)] (\(.status))
+    \"\(.title) [\(.type)] (\(.status))
      → \(.progress.current)/\(.progress.total) \(.progress.unit)\"
   end
 " "$LIB"

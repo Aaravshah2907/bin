@@ -39,11 +39,10 @@ tmdb_add() {
             type: "movie",
             subtype: null,
             status: "planned",
-            progress: { current: 0, total: 1, unit: "movie" },
+            progress: { current: 0, total: 1, unit: "scene" },
             seasons: null,
             metadata: { 
                 year: (.release_date[0:4] // null), 
-                release_date: (.release_date // null),
                 genres: .genre_ids 
             },
             source: {

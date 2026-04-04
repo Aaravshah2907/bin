@@ -67,7 +67,6 @@ tvmaze_add() {
 
       metadata: {
         year: ($year | tonumber?),
-        release_date: (.premiered // null),
         genres: []
       },
 
