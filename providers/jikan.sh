@@ -80,17 +80,11 @@ jikan_add() {
         id: "mal:\($mal_id)",
         title: (.title_english // .title),
         type: "anime",
+        brand: (.studios[0]?.name // .producers[0]?.name // "Unknown"),
         subtype: .type,
         status: "planned",
-        progress: {
-            current: 0,
-            total: (.episodes // 1),
-            unit: "episode"
-        },
-        seasons: {
-            current: 0,
-            total: 1
-        },
+        progress: { current: 0, total: (.episodes // 0), unit: "episode" },
+        seasons: { current: 0, total: 1 },
         metadata: {
             year: .aired.prop.from.year,
             release_date: (.aired.from[0:10] // null),
@@ -103,8 +97,16 @@ jikan_add() {
             id: ($mal_id | tonumber)
         },
         local: { path: "", available: false },
+        details: {
+            studios: [.studios[].name],
+            source: .source,
+            status: .status,
+            serialization: (.serialization // "")
+        },
         timestamps: { added: $now, updated: $now },
-        overview: (.synopsis | gsub("<[^>]*>"; "") // "No description provided.")
+        overview: (.synopsis | gsub("<[^>]*>"; "") // "No description provided."),
+        poster_path: (.images.jpg.large_image_url // .images.jpg.image_url // ""),
+        rating: (.score // 0)
     }
     '
 }
