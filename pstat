@@ -1,7 +1,31 @@
 #!/bin/bash
-# Pretty Stat for macOS - Clean "File Card" View with Human Sizes
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [FILE...]
 
-# Helper function to convert bytes to human-readable format
+Description:
+    Examining the physical and cognitive manifestations of files.
+    A Radiant's tool for deep inspection of objects in the Realm.
+
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
+
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' 
+HONOR='\033[0;33m'      
+SYL='\033[0;37m'        
+VOID='\033[0;35m'       
+NC='\033[0m'            
+
 human_size() {
     local bytes=$1
     if [[ $bytes -lt 1024 ]]; then
@@ -16,13 +40,9 @@ human_size() {
 }
 
 for arg in "$@"; do
-    COLOR="\033[1;34m"
-    BOLD="\033[1m"
-    RESET="\033[0m"
-
-    echo -e "${COLOR}--------------------------------------------${RESET}"
-    echo -e "${BOLD}📂 INFO:${RESET} $arg"
-    echo -e "${COLOR}--------------------------------------------${RESET}"
+    echo -e "${STORMLIGHT}--------------------------------------------${NC}"
+    echo -e "${HONOR}󱐌 PHYSICAL MANIFESTATION:${NC} ${SYL}$arg${NC}"
+    echo -e "${STORMLIGHT}--------------------------------------------${NC}"
     
     if [ -d "$arg" ]; then
         # FOLDER SPECIFIC
@@ -36,7 +56,6 @@ Modified:    %Sm" "$arg"
         echo -e "Total Size:  $SIZE (Recursive)"
     else
         # FILE SPECIFIC
-        # Capture raw bytes first
         RAW_BYTES=$(/usr/bin/stat -f "%z" "$arg")
         H_SIZE=$(human_size $RAW_BYTES)
 
@@ -50,11 +69,11 @@ Accessed:    %Sa" "$arg"
         
         # Media metadata check
         ext="${arg##*.}"
-        if [[ "$ext" =~ ^(png|jpg|jpeg|mp4|mov|pdf)$ ]]; then
-            echo -e "\033[1;32m--------------------------------------------${RESET}"
-            echo -e "${BOLD}💿 MEDIA METADATA:${RESET}"
+        if [[ "$ext" =~ ^(png|jpg|jpeg|mp4|mov|pdf|m4b|mkv|mp3)$ ]]; then
+            echo -e "${STORMLIGHT}--------------------------------------------${NC}"
+            echo -e "${HONOR}💿 COGNITIVE ESSENCE (Media Metadata):${NC}"
             mdls -name kMDItemPixelWidth -name kMDItemPixelHeight -name kMDItemDuration "$arg" 2>/dev/null
         fi
     fi
-    echo -e "${COLOR}--------------------------------------------${RESET}"
+    echo -e "${STORMLIGHT}--------------------------------------------${NC}"
 done

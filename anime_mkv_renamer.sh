@@ -1,35 +1,61 @@
 #!/bin/bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} [DIR]
+
+Description:
+    Soulcasts anime MKV files by renaming them based on a series name and episode number.
+    Original files are moved to an 'unproc' folder (Cognitive Realm).
+
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# --- HELP UTILITY END ---
+
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' 
+HONOR='\033[0;33m'      
+SYL='\033[0;37m'        
+VOID='\033[0;35m'       
+NC='\033[0m'            
 
 # Check if a directory was provided
 TARGET_DIR="${1:-.}"
 
 if [ ! -d "$TARGET_DIR" ]; then
-    echo "Error: Directory '$TARGET_DIR' not found."
+    echo -e "${VOID}🌩️ Error:${NC} I can't find the directory '$TARGET_DIR' in the Physical Realm."
     exit 1
 fi
 
-# Ask for the series name to use in the title/filename
-echo "Enter the Series Name (e.g., Shangrila-Frontier):"
+# Ask for the series name
+echo -e "${STORMLIGHT}󱐌 Bridgeboy, what should we call this Soulcasted sequence?${NC}"
 read -r SERIES_NAME
 
-# Create unproc folder inside the target directory
+# Create unproc folder
 mkdir -p "$TARGET_DIR/unproc"
 
-# Loop through MKV files in the specified folder
-# We use find to avoid the loop breaking if the directory content changes during movement
+# Loop through MKV files
 find "$TARGET_DIR" -maxdepth 1 -name "*.mkv" | while read -r f; do
     
     filename=$(basename "$f")
     
-    # Extract episode identifier (e.g., e01 -> E01)
+    # Extract episode identifier
     ep=$(echo "$filename" | grep -oiE 'e[0-9]{2}' | head -n 1 | tr '[:lower:]' '[:upper:]')
     
     if [ -n "$ep" ]; then
         new_name="${ep}-${SERIES_NAME}"
         
-        echo "Processing: $filename -> ${new_name}.mkv"
+        echo -e "${STORMLIGHT}✨ Lashing:${NC} ${SYL}$filename -> ${new_name}.mkv${NC}"
         
-        # 1. Create the edited file in the target (parent) directory
+        # 1. Create the edited file
         ffmpeg -i "$f" \
                -map 0 \
                -c copy \
@@ -37,15 +63,15 @@ find "$TARGET_DIR" -maxdepth 1 -name "*.mkv" | while read -r f; do
                -metadata title="$new_name" \
                "$TARGET_DIR/${new_name}.mkv" -y -loglevel error
         
-        # 2. Move the original unedited file to unproc
+        # 2. Move original to unproc
         mv "$f" "$TARGET_DIR/unproc/"
     else
-        echo "Skipping '$filename' (No E00 pattern found). Moving to unproc anyway..."
+        echo -e "${HONOR}󰊠 Skipping:${NC} '$filename' has no rhythmic pattern (E00). Moving to the unproc realm anyway..."
         mv "$f" "$TARGET_DIR/unproc/"
     fi
 done
 
-echo "--------------------------------------"
-echo "Batch processing complete."
-echo "Edited files are in: $TARGET_DIR"
-echo "Originals moved to: $TARGET_DIR/unproc"
+echo -e "${SYL}--------------------------------------${NC}"
+echo -e "${HONOR}󱇊 Journey before destination!${NC} Soulcasting complete."
+echo -e "${SYL}Ascended files are in: $TARGET_DIR${NC}"
+echo -e "${SYL}Originals hidden in Cognitive Realm: $TARGET_DIR/unproc${NC}"

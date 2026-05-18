@@ -17,12 +17,29 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     show_help
     exit 0
 fi
+
 # --- HELP UTILITY END ---
+
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' 
+HONOR='\033[0;33m'      
+SYL='\033[0;37m'        
+VOID='\033[0;35m'       
+NC='\033[0m'            
+
 # Enhanced Google Photos JSON to EXIF merger for macOS
 # Requires: brew install exiftool jq
 
 DIR="${1:-.}"
 EXIFTOOL="exiftool"
+
+# Dependency Check
+if ! command -v "$EXIFTOOL" &>/dev/null || ! command -v jq &>/dev/null; then
+    echo -e "${VOID}🌩️ Error:${NC} Exiftool or jq is missing from the Realm."
+    exit 1
+fi
+
+echo -e "${STORMLIGHT}󱐌 Summoning the Archives to bind Memories...${NC}"
 
 for json_file in "$DIR"/*.{json,json}; do
     [[ ! -f "$json_file" ]] && continue
@@ -36,7 +53,7 @@ for json_file in "$DIR"/*.{json,json}; do
     image_file=$(find "$DIR" -maxdepth 1 -name "$base_name*" ! -name "*.json" | head -1)
     [[ ! -f "$image_file" ]] && continue
     
-    echo "Processing $json_file → $image_file"
+    echo -e "${STORMLIGHT}✨ Binding Essence:${NC} ${SYL}$(basename "$json_file") -> $(basename "$image_file")${NC}"
     
     # Extract all metadata with fallbacks using jq
     photo_taken=$(jq -r '.photoTakenTime.timestamp // empty' "$json_file")
@@ -45,14 +62,14 @@ for json_file in "$DIR"/*.{json,json}; do
     title=$(jq -r '.title // empty' "$json_file")
     description=$(jq -r '.description // empty' "$json_file")
     
-    # GPS data (prefer geoData, fallback to geoDataExif)
+    # GPS data
     lat=$(jq -r '.geoData.latitude // .geoDataExif.latitude // 0' "$json_file")
     lon=$(jq -r '.geoData.longitude // .geoDataExif.longitude // 0' "$json_file")
     alt=$(jq -r '.geoData.altitude // .geoDataExif.altitude // 0' "$json_file")
     lat_span=$(jq -r '.geoData.latitudeSpan // .geoDataExif.latitudeSpan // 0' "$json_file")
     lon_span=$(jq -r '.geoData.longitudeSpan // .geoDataExif.longitudeSpan // 0' "$json_file")
     
-    # Prioritize photoTakenTime, fallback to creation/modified
+    # Prioritize photoTakenTime
     if [[ -n "$photo_taken" ]]; then
         main_time=$(date -j -f %s "$photo_taken" +%Y:%m:%d\ %H:%M:%S 2>/dev/null)
     elif [[ -n "$creation_time" ]]; then
@@ -64,7 +81,6 @@ for json_file in "$DIR"/*.{json,json}; do
     # Build exiftool args
     cmd=("$image_file" "-overwrite_original_in_place" "-m")
     
-    # Timestamps (AllDates for JPEG, specific for others)
     [[ -n "$main_time" ]] && cmd+=(-AllDates="$main_time")
     [[ -n "$creation_time" ]] && {
         create_time=$(date -j -f %s "$creation_time" +%Y:%m:%d\ %H:%M:%S 2>/dev/null)
@@ -75,14 +91,13 @@ for json_file in "$DIR"/*.{json,json}; do
         cmd+=(-ModifyDate="$mod_time")
     }
     
-    # Descriptions/Titles
     [[ -n "$title" && "$title" != "null" ]] && cmd+=(-ImageDescription="$title" -ObjectName="$title")
     [[ -n "$description" && "$description" != "null" && -n "$description" ]] && {
         cmd+=(-Description="$description")
         cmd+=(-Caption-Abstract="$description")
     }
     
-    # GPS (exiftool handles decimal→DMS conversion automatically)
+    # GPS
     if (( $(echo "$lat != 0 || $lon != 0" | bc -l 2>/dev/null) )); then
         cmd+=(-GPSLatitude="$lat")
         cmd+=(-GPSLongitude="$lon")
@@ -90,7 +105,7 @@ for json_file in "$DIR"/*.{json,json}; do
         [[ "$lon" != "0" && "$lon" != "0.0" ]] && cmd+=(-GPSLongitudeRef="$([[ $(echo "$lon >= 0" | bc -l) -eq 1 ]] && echo E || echo W)")
         [[ "$alt" != "0" && "$alt" != "0.0" ]] && {
             cmd+=(-GPSAltitude="$alt")
-            cmd+=(-GPSAltitudeRef="$([[ $(echo "$alt >= 0" | bc -l) -eq 1 ]] && echo 0 || echo 1)")  # 0=above,1=below sea
+            cmd+=(-GPSAltitudeRef="$([[ $(echo "$alt >= 0" | bc -l) -eq 1 ]] && echo 0 || echo 1)")
         }
         [[ "$lat_span" != "0" ]] && cmd+=(-GPSLatitudeSpan="$lat_span")
         [[ "$lon_span" != "0" ]] && cmd+=(-GPSLongitudeSpan="$lon_span")
@@ -100,9 +115,10 @@ for json_file in "$DIR"/*.{json,json}; do
     if [ ${#cmd[@]} -gt 3 ]; then
         "${EXIFTOOL}" "${cmd[@]}"
     else
-        echo "  → No metadata to embed"
+        echo -e "  ${SYL}󰊠 No essence found to bind.${NC}"
     fi
 done
 
-echo "Processing complete! Originals saved as .bak files."
+echo -e "${SYL}---------------------------------------${NC}"
+echo -e "${HONOR}✨ Journey before destination!${NC} Memories are Soulcast and preserved."
 

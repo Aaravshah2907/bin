@@ -18,7 +18,12 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     exit 0
 fi
 # --- HELP UTILITY END ---
-# Embed Google Photos Takeout JSON metadata into media files (recursive)
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' 
+HONOR='\033[0;33m'      
+SYL='\033[0;37m'        
+VOID='\033[0;35m'       
+NC='\033[0m'            
 
 set -euo pipefail
 
@@ -26,11 +31,11 @@ ROOT_DIR="${1:-.}"
 KB_EXTS='jpg|jpeg|png|heic|heif|tif|tiff|gif|mp4|mov|m4v|avi|mkv|webp'
 
 usage() {
-  echo "Usage: $(basename "$0") /path/to/takeout/photos"
+  echo -e "${HONOR}Usage:${NC} ${0##*/} /path/to/takeout/photos"
 }
 
 need() {
-  command -v "$1" >/dev/null 2>&1 || { echo "Missing dependency: $1" >&2; exit 2; }
+  command -v "$1" >/dev/null 2>&1 || { echo -e "${VOID}🌩️ Error:${NC} Missing dependency: $1" >&2; exit 2; }
 }
 
 [[ -d "$ROOT_DIR" ]] || { usage; exit 1; }
@@ -42,7 +47,7 @@ need awk
 need sed
 need date
 
-echo "Processing Google Photos metadata in: $ROOT_DIR"
+echo -e "${STORMLIGHT}󱐌 Summoning the Archives to bind Memories in: ${SYL}$ROOT_DIR${NC}"
 
 processed=0
 skipped_no_media=0
@@ -55,7 +60,7 @@ find_media_for_json() {
   local dir stem candidate
 
   dir="$(dirname "$json_file")"
-  stem="$(basename "${json_file%.json}")"   # e.g., IMG_1234.jpg or IMG_1234
+  stem="$(basename "${json_file%.json}")"
 
   # 1) If JSON is "IMG_1234.jpg.json" then media is "IMG_1234.jpg"
   candidate="$dir/$stem"
@@ -74,7 +79,6 @@ find_media_for_json() {
 epoch_to_exif() {
   local ep="$1"
   [[ -n "$ep" && "$ep" != "null" ]] || return 1
-  # macOS/BSD date supports -r <epoch>
   date -r "$ep" "+%Y:%m:%d %H:%M:%S" 2>/dev/null
 }
 
@@ -112,7 +116,7 @@ while IFS= read -r -d '' json_file; do
     continue
   fi
 
-  echo "Processing: $(basename "$media_file")"
+  echo -e "${STORMLIGHT}✨ Binding Essence:${NC} ${SYL}$(basename "$media_file")${NC}"
 
   # Build exiftool args (options first, then tags, then file)
   args=(-overwrite_original -m)
@@ -145,8 +149,7 @@ while IFS= read -r -d '' json_file; do
     fi
   fi
 
-  # Execute
-  if ! exiftool "${args[@]}" "$media_file"; then
+  if ! exiftool "${args[@]}" "$media_file" >/dev/null 2>&1; then
     ((errors++)) || true
     continue
   fi
@@ -154,8 +157,6 @@ while IFS= read -r -d '' json_file; do
   ((processed++)) || true
 done < <(find "$ROOT_DIR" -type f -iname "*.json" -print0)
 
-echo "DONE"
-echo "Processed: $processed"
-echo "Skipped (no media): $skipped_no_media"
-echo "Skipped (no metadata): $skipped_no_data"
-echo "Errors: $errors"
+echo -e "${SYL}---------------------------------------${NC}"
+echo -e "${HONOR}✨ Journey before destination!${NC} All Memories have been Soulcast and preserved."
+echo -e "${SYL}Processed: $processed | Errors: $errors${NC}"

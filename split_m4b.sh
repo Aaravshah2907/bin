@@ -19,8 +19,15 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 # --- HELP UTILITY END ---
 
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' 
+HONOR='\033[0;33m'      
+SYL='\033[0;37m'        
+VOID='\033[0;35m'       
+NC='\033[0m'            
+
 if [[ -z "$1" ]]; then
-    echo "Usage: ./split_m4b.sh /path/to/file.m4b"
+    echo -e "${HONOR}Usage:${NC} ${0##*/} /path/to/file.m4b"
     exit 1
 fi
 
@@ -33,48 +40,47 @@ METADATA=$(ffprobe -i "$INPUT_FILE" -print_format json -show_chapters -loglevel 
 CHAPTER_COUNT=$(echo "$METADATA" | jq '.chapters | length')
 
 if [[ "$CHAPTER_COUNT" -eq 0 ]]; then
-    echo "No chapters found."
+    echo -e "${VOID}🌩️ Error:${NC} No Soul-structure (chapters) found in this Shard."
     exit 1
 fi
 
-# 2. Display Chapters to the user
-echo "--- CHAPTER LIST ---"
+# 2. Display Chapters
+echo -e "${STORMLIGHT}󱐌 Examining the Soul-structure of the Shard...${NC}"
+echo -e "${SYL}---------------------------------------${NC}"
 echo "$METADATA" | jq -r '.chapters[] | "[\((.id + 1))] \(.tags.title // "Untitled Chapter")"'
-echo "--------------------"
+echo -e "${SYL}---------------------------------------${NC}"
 
 # 3. Get user selection
-echo "Enter the chapter ranges you want to group (e.g., '1-3 4-4 5-10'):"
-read -r USER_RANGES
+echo -e "${STORMLIGHT}⚔️ Bridgeboy, which fragments should I cleave?${NC}"
+echo -e "Enter chapter ranges (e.g., '1-3 4-4 5-10'):"
+read -rp "> " USER_RANGES
 
 # 4. Process each range
 PART_IDX=1
 for RANGE in $USER_RANGES; do
-    # Parse the range (e.g., 1-3 becomes START_ID=1 and END_ID=3)
     START_ID=$(echo "$RANGE" | cut -d'-' -f1)
     END_ID=$(echo "$RANGE" | cut -d'-' -f2)
 
-    # Convert to 0-based index for jq
     START_IDX=$((START_ID - 1))
     END_IDX=$((END_ID - 1))
 
-    # Fetch timestamps
     START_TIME=$(echo "$METADATA" | jq -r ".chapters[$START_IDX].start_time")
     END_TIME=$(echo "$METADATA" | jq -r ".chapters[$END_IDX].end_time")
 
-    # Safety check for invalid input
     if [[ "$START_TIME" == "null" || "$END_TIME" == "null" ]]; then
-        echo "Skipping invalid range: $RANGE"
+        echo -e "${VOID}Skipping invalid fragment: $RANGE${NC}"
         continue
     fi
 
     PART_NUM=$(printf "P%02d" $PART_IDX)
     OUTPUT_PATH="${INPUT_DIR}/${FILENAME_BASE}_${PART_NUM}.mp3"
 
-    echo "Exporting Range [$RANGE] to: $(basename "$OUTPUT_PATH")"
+    echo -e "${STORMLIGHT}✨ Cleaving Range [$RANGE] to:${NC} ${SYL}$(basename "$OUTPUT_PATH")${NC}"
 
     ffmpeg -i "$INPUT_FILE" -ss "$START_TIME" -to "$END_TIME" -vn -c:a libmp3lame -q:a 2 "$OUTPUT_PATH" -loglevel error
 
     ((PART_IDX++))
 done
 
-echo "Done! Files are in $INPUT_DIR"
+echo -e "${SYL}---------------------------------------${NC}"
+echo -e "${HONOR}✨ Soulcasting complete!${NC} The fragments are ready."

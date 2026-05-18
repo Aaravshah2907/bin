@@ -1,31 +1,51 @@
 #!/bin/bash
+# --- HELP UTILITY START ---
+show_help() {
+    cat << HELP_EOF
+Usage: ${0##*/} /path/to/folder
 
-# --- 0. Handle Help Flag ---
-if [[ "$1" == "-h" ]]; then
-    echo "Usage: $0 /path/to/folder"
+Description:
+    Binding multiple rhythms together into a single Soulcast Audiobook (M4B).
+    Preserves chapters, cover art, and metadata during the Binding process.
+
+Options:
+    -h, --help    Display this help message and exit.
+
+HELP_EOF
+}
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
     exit 0
 fi
+# --- HELP UTILITY END ---
+
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' 
+HONOR='\033[0;33m'      
+SYL='\033[0;37m'        
+VOID='\033[0;35m'       
+NC='\033[0m'            
 
 # --- 1. SETUP & INPUTS ---
 if [ -z "$1" ]; then
-    echo "Usage: $0 /path/to/folder"
+    show_help
     exit 1
 fi
 
 TARGET_DIR=$(realpath "$1")
 cd "$TARGET_DIR" || exit 1
 
-echo "--- Audiobook Metadata ---"
-read -p "Enter Audiobook Title: " TITLE_INPUT
-read -p "Enter Album Name: " ALBUM_NAME
-read -p "Enter Author (Artist): " AUTHOR_NAME
-echo "--------------------------"
+echo -e "${STORMLIGHT}󱐌 Bridgeboy, what should this collective Soul be called?${NC}"
+read -rp "Enter Audiobook Title: " TITLE_INPUT
+read -rp "Enter Album Name:     " ALBUM_NAME
+read -rp "Enter Author (Artist): " AUTHOR_NAME
+echo -e "${SYL}---------------------------------------${NC}"
 
 OUTPUT="combined_audiobook.m4b"
 LIST_FILE="list.txt"
 META_FILE="metadata.txt"
 
-echo "🚀 Starting process in: $TARGET_DIR"
+echo -e "${STORMLIGHT}🚀 Starting Binding in:${NC} ${SYL}$TARGET_DIR${NC}"
 
 # --- 2. FILENAME SANITIZATION ---
 for f in *.[mM][pP]3; do
@@ -40,7 +60,7 @@ done
 COVER_IMAGE=$(ls | grep -Ei "\.(jpg|jpeg|png)$" | head -n 1)
 
 # --- 4. GENERATE LIST AND CHAPTER METADATA ---
-echo "📝 Calculating chapter timings..."
+echo -e "${SYL}📝 Distilling the Essence of the chapters...${NC}"
 rm -f "$LIST_FILE" "$META_FILE"
 
 # Create metadata header
@@ -52,38 +72,29 @@ artist=$AUTHOR_NAME
 genre=Audiobook
 EOF
 
-# Use a standard Bash glob. 
-# We nullglob manually to avoid the loop running on a literal "*.mp3" string
 shopt -s nullglob
 files=( *.[mM][pP]3 )
 shopt -u nullglob
 
 if [ ${#files[@]} -eq 0 ]; then
-    echo "❌ No MP3 files found in $TARGET_DIR"
+    echo -e "${VOID}❌ No rhythm fragments (MP3) found in $TARGET_DIR${NC}"
     exit 1
 fi
 
 CURRENT_TIME=0
-
-# Sort the array numerically/version-style
-# We pipe the null-terminated list to sort -z to handle spaces/special chars
 IFS=$'\n' sorted_files=($(printf "%s\n" "${files[@]}" | sort -V))
 unset IFS
 
 for f in "${sorted_files[@]}"; do
-    # Escape single quotes for ffmpeg's concat list.txt
-    # Example: Shallan's Theme -> Shallan'\''s Theme
     escaped_f=$(echo "$f" | sed "s/'/'\\\\''/g")
     echo "file '$escaped_f'" >> "$LIST_FILE"
     
-    # Get duration - quotes around "$f" are critical for those pipes | and spaces
     DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$f")
     
     START_MS=$(echo "($CURRENT_TIME * 1000) / 1" | bc)
     END_TIME=$(echo "$CURRENT_TIME + $DURATION" | bc)
     END_MS=$(echo "($END_TIME * 1000) / 1" | bc)
     
-    # Chapter title: remove extension and swap underscores for spaces
     CHAP_TITLE=$(basename "$f" | sed 's/\.[^.]*$//' | tr '_' ' ')
     
     cat <<EOF >> "$META_FILE"
@@ -98,26 +109,26 @@ EOF
 done
 
 # --- 5. EXECUTE FFMPEG ---
-echo "🏗️  Encoding to M4B (AAC)..."
+echo -e "${STORMLIGHT}🏗️  Binding into a single Shard (AAC)...${NC}"
 
 if [ -n "$COVER_IMAGE" ]; then
-    # -map 0:a and -map 1:v ensures we only take audio and the image, ignoring bad data streams
-    ffmpeg -f concat -safe 0 -i "$LIST_FILE" -i "$COVER_IMAGE" -i "$META_FILE" \
+    ffmpeg -hide_banner -loglevel panic -f concat -safe 0 -i "$LIST_FILE" -i "$COVER_IMAGE" -i "$META_FILE" \
         -map 0:a -map 1:v -map_metadata 2 \
         -c:a aac -b:a 128k -af "aresample=async=1" \
         -c:v copy -disposition:v:0 attached_pic \
         -stats -y "$OUTPUT"
 else
-    ffmpeg -f concat -safe 0 -i "$LIST_FILE" -i "$META_FILE" \
+    ffmpeg -hide_banner -loglevel panic -f concat -safe 0 -i "$LIST_FILE" -i "$META_FILE" \
         -map 0:a -map_metadata 1 \
         -c:a aac -b:a 128k -af "aresample=async=1" \
         -stats -y "$OUTPUT"
 fi
 
 rm "$LIST_FILE" "$META_FILE"
-echo "------------------------------------------------"
-echo "✅ SUCCESS! Created: $OUTPUT"
-echo "Title:  $TITLE_INPUT"
-echo "Album:  $ALBUM_NAME"
-echo "Author: $AUTHOR_NAME"
-echo "------------------------------------------------"
+echo -e "${SYL}------------------------------------------------${NC}"
+echo -e "${HONOR}✨ Journey before destination!${NC} Your Binding is complete."
+echo -e "${SYL}Final Shard:  $OUTPUT${NC}"
+echo -e "${SYL}Title:        $TITLE_INPUT${NC}"
+echo -e "${SYL}Album:  $ALBUM_NAME${NC}"
+echo -e "${SYL}Author: $AUTHOR_NAME${NC}"
+echo -e "${SYL}------------------------------------------------${NC}"

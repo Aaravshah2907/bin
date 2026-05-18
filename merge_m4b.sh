@@ -19,9 +19,16 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 # --- HELP UTILITY END ---
 
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' 
+HONOR='\033[0;33m'      
+SYL='\033[0;37m'        
+VOID='\033[0;35m'       
+NC='\033[0m'            
+
 # Check if a directory was provided
 if [ -z "$1" ]; then
-    echo "Usage: ./merge_m4b.sh /path/to/audiobook_folder"
+    echo -e "${HONOR}Usage:${NC} ${0##*/} /path/to/audiobook_folder"
     exit 1
 fi
 
@@ -29,7 +36,7 @@ TARGET_DIR="$1"
 
 # Check if the directory exists
 if [ ! -d "$TARGET_DIR" ]; then
-    echo "Error: Directory $TARGET_DIR does not exist."
+    echo -e "${VOID}🌩️ Error:${NC} Directory $TARGET_DIR does not exist in the Physical Realm."
     exit 1
 fi
 
@@ -37,21 +44,23 @@ fi
 cd "$TARGET_DIR" || exit
 
 # 1. Get User Input
-read -p "Enter Album/Book Name: " ALBUM
-read -p "Enter Author/Artist: " AUTHOR
-read -p "Enter Title: " TITLE
+echo -e "${STORMLIGHT}󱐌 Bridgeboy, what should this unified Shard be called?${NC}"
+read -rp "Enter Album/Book Name: " ALBUM
+read -rp "Enter Author/Artist:    " AUTHOR
+read -rp "Enter Title:            " TITLE
+echo -e "${SYL}---------------------------------------${NC}"
 
 # 2. Find the first image (jpg or png)
 COVER=$(ls *.jpg *.jpeg *.png 2>/dev/null | head -n 1)
 
 if [ -z "$COVER" ]; then
-    echo "Warning: No cover image found. Proceeding without art."
+    echo -e "${HONOR}󱐋 Warning:${NC} No cover image found. Proceeding without art."
 fi
 
 # 3. Create a list of m4b files in alphabetical order
 files=( *.m4b )
 if [ ${#files[@]} -eq 0 ]; then
-    echo "No .m4b files found in $TARGET_DIR"
+    echo -e "${VOID}🌩️ Storms!${NC} No .m4b files found in $TARGET_DIR"
     exit 1
 fi
 
@@ -62,14 +71,11 @@ for f in "${files[@]}"; do
     echo "file '$f'" >> "$CONCAT_FILE"
 done
 
-echo "Processing files in: $TARGET_DIR"
-echo "Re-encoding and merging... this may take a few minutes."
+echo -e "${STORMLIGHT}🚀 Unifying Shards in:${NC} ${SYL}$TARGET_DIR${NC}"
+echo -e "${SYL}Re-encoding and merging... This may take a few minutes.${NC}"
 
 # 5. Run ffmpeg
-# -f concat: joins files
-# -i "$COVER": adds the image
-# -map_metadata 0: tells ffmpeg to attempt to carry over global metadata
-ffmpeg -f concat -safe 0 -i "$CONCAT_FILE" -i "$COVER" \
+ffmpeg -hide_banner -loglevel panic -f concat -safe 0 -i "$CONCAT_FILE" -i "$COVER" \
     -map 0:a -map 1:v \
     -c:a aac -b:a 128k \
     -c:v copy -disposition:v:0 attached_pic \
@@ -81,5 +87,6 @@ ffmpeg -f concat -safe 0 -i "$CONCAT_FILE" -i "$COVER" \
 # 6. Cleanup
 rm "$CONCAT_FILE"
 
-echo "------------------------------------------------"
-echo "Done! File saved in: $TARGET_DIR/merged_audiobook.m4b"
+echo -e "${SYL}------------------------------------------------${NC}"
+echo -e "${HONOR}✨ Journey before destination!${NC} The Shards have been unified."
+echo -e "${SYL}Saved in: $TARGET_DIR/merged_audiobook.m4b${NC}"

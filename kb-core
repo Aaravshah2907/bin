@@ -7,24 +7,32 @@ export KB_FILE
 mkdir -p "$(dirname "$KB_FILE")" || exit 1
 [ -f "$KB_FILE" ] || : >"$KB_FILE"
 
-die() { printf '%s\n' "$*" >&2; exit 1; }
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' # Cyan
+HONOR='\033[0;33m'      # Gold
+SYL='\033[0;37m'        # White/Silver
+VOID='\033[0;35m'       # Purple
+NC='\033[0m'            # No Color
+
+die() { printf "${VOID}🌩️ Error: %s${NC}\n" "$*" >&2; exit 1; }
 
 help() {
-  cat <<'EOF'
+  cat <<EOF
+${HONOR}📚 Archives of the Knights Radiant${NC}
 Usage: kb <subcommand> [args]
 
 Subcommands:
-  add "HEADER" [N]   Save last N commands (default 1) under HEADER
-  search             Select an entry and print the command to stdout
-  insert             (zsh only) Insert selected command into prompt buffer
-  grep TERM          Search KB file for TERM (prints matching lines)
-  help               Show this help
+  add "HEADER" [N]   Preserve last N oaths under HEADER
+  search             Consult the archives and retrieve an oath
+  insert             (zsh only) Lash an oath directly to your prompt
+  grep TERM          Search the cognitive realm for TERM
+  help               Show this guide
 
 Examples:
-  kb add "Adding cover art to mp3" 1
+  kb add "Soulcasting MP3s" 1
   kb search
   kb insert
-  kb grep ffmpeg
+  kb grep Stormlight
 EOF
 }
 
@@ -34,19 +42,19 @@ list_headers() {
 
 cmd__add_stdin() {
   header=$1
-  [ -n "$header" ] || die "Error: add requires HEADER"
+  [ -n "$header" ] || die "add requires HEADER"
 
   cmd_list=$(cat)
-  [ -n "$cmd_list" ] || die "Error: no commands received on stdin"
+  [ -n "$cmd_list" ] || die "no commands received on stdin"
 
   {
     printf '## %s\n' "$header"
     printf '```sh\n'
     printf '%s\n' "$cmd_list"
     printf '```\n\n'
-  } >>"$KB_FILE" || die "Error: could not write to $KB_FILE"
+  } >>"$KB_FILE" || die "could not write to $KB_FILE"
 
-  printf 'Saved to %s\n' "$KB_FILE"
+  printf "${STORMLIGHT}󱐌 Essence preserved in the Archives of Honor.${NC}\n"
 }
 
 cmd__preview() {
@@ -104,22 +112,22 @@ cmd_add() {
   header=$1
   count=${2:-1}
 
-  [ -n "$header" ] || die "Error: add requires HEADER"
+  [ -n "$header" ] || die "add requires HEADER"
   case "$count" in
-    ''|*[!0-9]*) die "Error: N must be a positive integer" ;;
+    ''|*[!0-9]*) die "N must be a positive integer" ;;
   esac
 
-  cmd_list=$(get_last_commands "$count") || die "Error: cannot read history (try running from an interactive shell)"
-  [ -n "$cmd_list" ] || die "Error: no commands captured from history"
+  cmd_list=$(get_last_commands "$count") || die "cannot read history (try running from an interactive shell)"
+  [ -n "$cmd_list" ] || die "no commands captured from history"
 
   {
     printf '## %s\n' "$header"
     printf '```sh\n'
     printf '%s\n' "$cmd_list"
     printf '```\n\n'
-  } >>"$KB_FILE" || die "Error: could not write to $KB_FILE"
+  } >>"$KB_FILE" || die "could not write to $KB_FILE"
 
-  printf 'Saved to %s\n' "$KB_FILE"
+  printf "${STORMLIGHT}󱐌 Oath '${header}' preserved in the Archives.${NC}\n"
 }
 
 cmd_search() {
@@ -129,7 +137,7 @@ cmd_search() {
     list_headers | SHELL=/bin/sh fzf \
       --height 50% \
       --reverse \
-      --prompt='Knowledge Base Search > ' \
+      --prompt='󱐌 Consult Archives > ' \
       --preview-window='right:55%:wrap' \
       --preview "$SELF __preview \"$KB_FILE\" {}"
   ) || exit 1
@@ -151,7 +159,7 @@ cmd_insert() {
 
 cmd_grep() {
   term=$1
-  [ -n "$term" ] || die "Error: grep requires TERM"
+  [ -n "$term" ] || die "grep requires TERM"
   grep -in "$term" "$KB_FILE"
 }
 

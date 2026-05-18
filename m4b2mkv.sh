@@ -5,9 +5,8 @@ show_help() {
 Usage: ${0##*/} [OPTIONS] <file1.m4b> [file2.m4b ...]
 
 Description:
-    Converts M4B/M4A audiobooks into MKV containers. 
-    Uses lossless remuxing to preserve all audio quality, chapters, 
-    cover art, and metadata (author, genre, title, etc.).
+    Infuses M4B/M4A audiobooks with Stormlight and ascends them into MKV containers.
+    Preserves all Soulcast chapters, cover art, and metadata (author, genre, title, etc.).
 
 Options:
     -h, --help    Display this help message and exit.
@@ -17,15 +16,16 @@ HELP_EOF
 # --- HELP UTILITY END ---
 
 m4b2mkv() {
-    # Colors for output
-    RED='\033[0;31m'
-    GREEN='\033[0;32m'
-    BLUE='\033[0;34m'
-    NC='\033[0m'
+    # --- Radiant Theme Colors ---
+    STORMLIGHT='\033[0;36m' # Cyan
+    HONOR='\033[0;33m'      # Gold
+    SYL='\033[0;37m'        # White/Silver
+    VOID='\033[0;35m'       # Purple
+    NC='\033[0m'            # No Color
 
     # Check if ffmpeg is installed
     if ! command -v ffmpeg &> /dev/null; then
-        echo -e "${RED}Error: ffmpeg is not installed.${NC} Please install it using 'brew install ffmpeg'."
+        echo -e "${VOID}🌩️ Error: ffmpeg is not present in the Physical Realm.${NC} Please install it using 'brew install ffmpeg'."
         return 1
     fi
 
@@ -38,7 +38,7 @@ m4b2mkv() {
     # Process each file provided
     for input in "$@"; do
         if [[ ! -f "$input" ]]; then
-            echo -e "${RED}Error:${NC} File '$input' not found. Skipping."
+            echo -e "${VOID}🌩️ Storms!${NC} I can't find '$input' anywhere in the Cognitive Realm. Skipping."
             continue
         fi
 
@@ -46,22 +46,23 @@ m4b2mkv() {
         extension="${input##*.}"
         ext_lower=$(echo "$extension" | tr '[:upper:]' '[:lower:]')
         if [[ "$ext_lower" != "m4b" && "$ext_lower" != "m4a" ]]; then
-            echo -e "${RED}Warning:${NC} '$input' does not appear to be an M4B/M4A file. Attempting anyway..."
+            echo -e "${HONOR}󱐋 Warning:${NC} '$input' doesn't look like an audiobook to me, Bridgeboy. Attempting anyway!"
         fi
 
         output="${input%.*}.mkv"
 
         # Handle file name collision
         if [[ -f "$output" ]]; then
-            echo -e "${RED}Warning:${NC} '$output' already exists. Overwrite? (y/N)"
+            echo -e "${HONOR}󱐋 Storms!${NC} A Shard named '$output' already exists. Should I Lash over it? (y/N)"
             read -r response
             if [[ "$response" != "y" ]]; then
-                echo -e "${BLUE}Skipping:${NC} $input"
+                echo -e "${SYL}󰊠 Skipping:${NC} Keeping the old Shard. $input"
                 continue
             fi
         fi
 
-        echo -e "${BLUE}Converting:${NC} $input -> $output"
+        filename=$(basename "$input")
+        echo -e "${STORMLIGHT}󱐌 Infusing:${NC} ${SYL}Journey before destination! Transforming '$filename'...${NC}"
 
         # The ffmpeg command:
         # -map 0:a -map 0:v? -map 0:s?: Map only supported streams
@@ -71,9 +72,9 @@ m4b2mkv() {
         ffmpeg -hide_banner -loglevel error -i "$input" -map 0:a -map 0:v? -map 0:s? -c:a aac -b:a 128k -c:v copy -map_metadata 0 "$output"
 
         if [ $? -eq 0 ]; then
-            echo -e "${GREEN}Successfully converted:${NC} $output"
+            echo -e "${HONOR}✨ Life before death!${NC} ${SYL}'$filename' has been successfully ascended to MKV.${NC}"
         else
-            echo -e "${RED}Failed to convert:${NC} $input"
+            echo -e "${VOID}🌩️ Odium reigns...${NC} I failed to convert '$input'. Maybe try again later?"
         fi
     done
 }

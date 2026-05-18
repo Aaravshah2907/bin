@@ -19,9 +19,16 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 # --- HELP UTILITY END ---
 
+# --- Radiant Theme Colors ---
+STORMLIGHT='\033[0;36m' 
+HONOR='\033[0;33m'      
+SYL='\033[0;37m'        
+VOID='\033[0;35m'       
+NC='\033[0m'            
+
 # Dependency Check
 if ! command -v ffmpeg &> /dev/null || ! command -v ffprobe &> /dev/null; then
-    echo "Error: ffmpeg/ffprobe is required. Please install them."
+    echo -e "${VOID}🌩️ Error: Shardblades (ffmpeg/ffprobe) not found in the Physical Realm.${NC}"
     exit 1
 fi
 
@@ -30,7 +37,7 @@ shift
 TIMESTAMPS=("$@")
 
 if [[ -z "$INPUT" || ${#TIMESTAMPS[@]} -eq 0 ]]; then
-    echo "Usage: ./mp3_time_splitter.sh <file.mp3> <time1> <time2> ..."
+    echo -e "${HONOR}Usage:${NC} ${0##*/} <file.mp3> <time1> <time2> ..."
     exit 1
 fi
 
@@ -40,18 +47,19 @@ ORIG_TITLE=$(ffprobe -v error -show_entries format_tags=title -of default=noprin
 ORIG_ALBUM=$(ffprobe -v error -show_entries format_tags=album -of default=noprint_wrappers=1:nokey=1 "$INPUT")
 ORIG_ARTIST=$(ffprobe -v error -show_entries format_tags=artist -of default=noprint_wrappers=1:nokey=1 "$INPUT")
 
-# 2. Check for missing metadata and prompt user if necessary
+# 2. Check for missing metadata
 if [ -z "$ORIG_TITLE" ]; then
-    read -p "Title metadata missing. Enter Title (or press Enter to use filename): " ORIG_TITLE
+    echo -e "${STORMLIGHT}󱐌 Bridgeboy, the Title Essence is missing!${NC}"
+    read -rp "Enter Title (or Enter to keep original): " ORIG_TITLE
     [ -z "$ORIG_TITLE" ] && ORIG_TITLE="${INPUT%.*}"
 fi
 
 if [ -z "$ORIG_ALBUM" ]; then
-    read -p "Album metadata missing. Enter Album name: " ORIG_ALBUM
+    read -rp "Album Essence missing. Enter Album: " ORIG_ALBUM
 fi
 
 if [ -z "$ORIG_ARTIST" ]; then
-    read -p "Author (Artist) metadata missing. Enter Author name: " ORIG_ARTIST
+    read -rp "Author Essence missing. Enter Author: " ORIG_ARTIST
 fi
 
 # 3. Prepare split points
@@ -60,12 +68,10 @@ NUM_PARTS=$((${#POINTS[@]} - 1))
 EXTENSION="${INPUT##*.}"
 BASENAME="${INPUT%.*}"
 
-echo "---"
-echo "Processing: $INPUT"
-echo "Target Title: $ORIG_TITLE"
-echo "Target Album: $ORIG_ALBUM"
-echo "Target Author: $ORIG_ARTIST"
-echo "---"
+echo -e "${SYL}---------------------------------------${NC}"
+echo -e "${STORMLIGHT}󱐌 Examining Essence:${NC} ${SYL}$INPUT${NC}"
+echo -e "${SYL}Title: $ORIG_TITLE${NC}"
+echo -e "${SYL}---------------------------------------${NC}"
 
 # 4. Perform the split
 for (( i=0; i<$NUM_PARTS; i++ ))
@@ -74,16 +80,13 @@ do
     END="${POINTS[$((i+1))]}"
     PART_NUM=$((i + 1))
     
-    # Format part number with leading zero if total parts > 9
     printf -v PAD_PART "%02d" $PART_NUM
     
     OUT_FILE="${BASENAME}_Part${PAD_PART}.${EXTENSION}"
     NEW_TITLE="${ORIG_TITLE} Part ${PART_NUM}"
 
-    echo "Creating Part $PART_NUM: [$START to $END] -> $OUT_FILE"
+    echo -e "${STORMLIGHT}⚔️ Cleaving Part $PART_NUM:${NC} ${SYL}[$START to $END] -> $OUT_FILE${NC}"
 
-    # -map_metadata 0: Copies all global metadata (including cover art)
-    # -metadata: Overwrites specific tags
     ffmpeg -v quiet -stats -i "$INPUT" -ss "$START" -to "$END" \
            -map_metadata 0 \
            -metadata title="$NEW_TITLE" \
@@ -92,4 +95,5 @@ do
            -c copy "$OUT_FILE"
 done
 
-echo "Done! All segments have been exported with updated metadata."
+echo -e "${SYL}---------------------------------------${NC}"
+echo -e "${HONOR}✨ Journey before destination!${NC} The segments are Soulcast."
