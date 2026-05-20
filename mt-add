@@ -74,8 +74,15 @@ case "$TYPE" in
     entry=$(tmdb_add "$query")
     ;;
   book)
-    source "$PROVIDERS/googlebooks.sh"
-    entry=$(googlebooks_add "$query")
+    echo "Select Book Provider: (1) OpenLibrary [Default] (2) Google Books"
+    read -r -p "Enter provider number: " prov_choice
+    if [ "$prov_choice" = "2" ]; then
+        source "$PROVIDERS/googlebooks.sh"
+        entry=$(googlebooks_add "$query")
+    else
+        source "$PROVIDERS/openlibrary.sh"
+        entry=$(openlibrary_add "$query")
+    fi
     ;;
   *)
     echo "Unsupported type: $TYPE"

@@ -106,16 +106,27 @@ fetch_book() {
 
     [[ -f "$file" ]] && { echo "Cache exists for book $id, skipping."; return; }
 
-    # Handle both full URL IDs and simple IDs
-    local clean_id="${id#googlebooks:}"
-    clean_id="${clean_id#gb:}"
+    if [[ "$id" == ol:* ]]; then
+        local key="${id#ol:}"
+        curl -s -A "mt-info/1.0" "https://openlibrary.org${key}.json" | jq . > "$file"
+        
+        if [[ ! -s "$file" ]] || ! jq -e . "$file" >/dev/null 2>&1; then
+            echo "Failed to fetch book $id from OpenLibrary."
+            rm -f "$file"
+            return 1
+        fi
+    else
+        # Handle both full URL IDs and simple IDs for Google Books
+        local clean_id="${id#googlebooks:}"
+        clean_id="${clean_id#gb:}"
 
-    curl -s "https://www.googleapis.com/books/v1/volumes/${clean_id}" | jq . > "$file"
+        curl -s "https://www.googleapis.com/books/v1/volumes/${clean_id}" | jq . > "$file"
 
-    if [[ ! -s "$file" ]]; then
-        echo "Failed to fetch book $id from Google Books."
-        rm -f "$file"
-        return 1
+        if [[ ! -s "$file" ]]; then
+            echo "Failed to fetch book $id from Google Books."
+            rm -f "$file"
+            return 1
+        fi
     fi
 
     echo "Saved book $id to $file"
