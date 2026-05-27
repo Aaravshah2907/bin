@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+
+# Terminal color codes
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Destination folders
+UPLOAD_DIR="$HOME/Documents/Temp/GP-Upload/Up"
+MATCHED_DIR="$HOME/Documents/Temp/GP-Matched"
+
+# Create destination folders
+mkdir -p "$UPLOAD_DIR"
+mkdir -p "$MATCHED_DIR"
+
+# Supported image/video extensions
+SUPPORTED_EXTENSIONS=(
+    jpg jpeg png heic heif tif tiff gif
+    mp4 mov m4v avi mkv webm
+)
+
+# Check arguments
+if [ "$#" -eq 0 ]; then
+    echo -e "${YELLOW}Usage: $0 <directory1> [directory2 ...]${NC}"
+    exit 1
+fi
+
+# Function to check supported extensions
+is_supported() {
+    local ext
+    ext=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+
+    for supported in "${SUPPORTED_EXTENSIONS[@]}"; do
+        if [[ "$ext" == "$supported" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+for target_dir in "$@"; do
+
+    # Verify directory exists
+    if [ ! -d "$target_dir" ]; then
+        echo -e "${RED}Error: Directory '$target_dir' not found. Skipping.${NC}"
+        continue
+    fi
+
+    echo -e "\n${YELLOW}========================================${NC}"
+    echo -e "${YELLOW}Processing directory: $target_dir${NC}"
+    echo -e "${YELLOW}========================================${NC}"
+
+    # Process recursively
+    find "$target_dir" -type f ! -name "*_original" -print0 | while IFS= read -r -d $'\0' file; do
+
+        ext="${file##*.}"
+
+        # Skip unsupported files
+        if ! is_supported "$ext"; then
+            echo -e "${BLUE}[SKIPPED]${NC} $file (Unsupported file type)"
+            continue
+        fi
+
+        backup_file="${file}_original"
+
+        # Read metadata BEFORE modification
+        before_date=$(exiftool -s -s -s -DateTimeOriginal "$file" 2>/dev/null)
+
+        # Apply metadata from filename
+        exiftool "-alldates<filename" "$file" > /dev/null 2>&1
+
+        # Read metadata AFTER modification
+        after_date=$(exiftool -s -s -s -DateTimeOriginal "$file" 2>/dev/null)
+
+        # CASE 1: File was genuinely modified
+        if [ -f "$backup_file" ]; then
+
+            echo -e "${GREEN}[UPDATED]${NC} $file -> $after_date"
+
+            # Remove backup
+            rm "$backup_file"
+
+            # Move updated file
+            mv "$file" "$UPLOAD_DIR"/
+
+            echo -e "${GREEN}[MOVED]${NC} $(basename "$file") -> $UPLOAD_DIR"
+
+        # CASE 2: No modification, but filename already matched metadata
+        elif [ -n "$before_date" ] && [ "$before_date" = "$after_date" ]; then
+
+            echo -e "${YELLOW}[MATCHED]${NC} $file already had correct metadata"
+
+            mv "$file" "$MATCHED_DIR"/
+
+            echo -e "${YELLOW}[MOVED]${NC} $(basename "$file") -> $MATCHED_DIR"
+
+        # CASE 3: Failure
+        else
+
+            echo -e "${RED}[FAILED]${NC} $file (No parsable date found in filename)"
+
+            # Restore original if backup somehow exists
+            if [ -f "$backup_file" ]; then
+                mv "$backup_file" "$file"
+            fi
+        fi
+
+    done
+done
+
+echo -e "\n${GREEN}Batch processing complete!${NC}"
