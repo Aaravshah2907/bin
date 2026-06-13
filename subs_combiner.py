@@ -3,6 +3,8 @@ import os
 import sys
 import json
 
+# Combines subs to a mkv file
+
 def get_mkv_metadata(mkv_path):
     cmd = [
         'ffprobe', '-v', 'quiet', '-print_format', 'json', 

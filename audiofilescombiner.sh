@@ -1,4 +1,7 @@
 #!/bin/bash
+
+## For combing mp3 files in a directory into a m4b file.
+
 # --- HELP UTILITY START ---
 show_help() {
     cat << HELP_EOF

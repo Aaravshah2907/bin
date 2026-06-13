@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# To restore dates in images based on metadata.
+
 # Terminal color codes
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -8,7 +10,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Destination folders
-UPLOAD_DIR="$HOME/Documents/Temp/GP-Upload/Up"
+UPLOAD_DIR="$HOME/Documents/Temp/GP-Upload"
 MATCHED_DIR="$HOME/Documents/Temp/GP-Matched"
 
 # Create destination folders

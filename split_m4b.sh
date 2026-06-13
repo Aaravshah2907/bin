@@ -1,5 +1,8 @@
 #!/bin/bash
 # --- HELP UTILITY START ---
+
+# For splitting a m4b file into seperate files based on chapter ranges.
+
 show_help() {
     cat << HELP_EOF
 Usage: ${0##*/} [M4B FILE]
