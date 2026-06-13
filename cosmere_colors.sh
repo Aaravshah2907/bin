@@ -192,9 +192,9 @@ export BT_IDLE=$WHITE                         # Was RUIN_MIST (invisible) — fi
 export BATT_ACCENT=$PRES_MIST
 export BATT_ACCENT_T=$PRES_MIST_TRANSLUCENT
 
-# Clock / Calendar — Sibling (Urithiru crystal amber)
-export CLOCK_ACCENT=$SPREN_SIBLING
-export CLOCK_ACCENT_T=$SPREN_SIBLING_T
+# Clock / Calendar — Windrunner Sapphire (clean, always readable on dark)
+export CLOCK_ACCENT=$SAPPHIRE
+export CLOCK_ACCENT_T=$SAPPHIRE_TRANSLUCENT
 
 # Notifications — Gloryspren gold
 export NOTIF_ACCENT=$SPREN_GLORY
@@ -204,6 +204,48 @@ export NOTIF_ACCENT_T=$SPREN_GLORY_T
 export SPACE_ACCENT=$SPREN_STORM
 export SPACE_ACCENT_T=$SPREN_STORM_T
 
-# Front App — Cryptic shimmer (lies & truths of app state)
-export FRONTAPP_ACCENT=$SPREN_CRYPTIC
-export FRONTAPP_ACCENT_T=$SPREN_CRYPTIC_T
+# Front App — Honorspren sky blue (clear & readable on dark, not violet)
+export FRONTAPP_ACCENT=$SPREN_HONOR
+export FRONTAPP_ACCENT_T=$SPREN_HONOR_T
+
+# ──────────────────────────────────────────────
+# ANSI TERMINAL COLORS  (for radiant-player, shell UIs)
+# Uses 256-color codes mapped to the Cosmere palette
+# ──────────────────────────────────────────────
+export T_RESET='\033[0m'
+export T_BOLD='\033[1m'
+export T_DIM='\033[2m'
+
+# Windrunner / Stormlight
+export T_SAPPHIRE='\033[38;5;39m'        # #00BFFF Windrunner Sapphire
+export T_HONOR_GOLD='\033[38;5;220m'     # #FFD700 Honor Gold
+export T_EMERALD='\033[38;5;83m'         # #50fa7b Lifebound Emerald
+export T_VIOLET='\033[38;5;105m'         # #8989ff Shardblade Violet
+export T_AMBER='\033[38;5;215m'          # #ffb86c Lightweaver Amber
+export T_CRIMSON='\033[38;5;204m'        # #ed8796 Odium Crimson
+
+# Scadrial — Ruin
+export T_RUIN_MAROON='\033[38;5;88m'     # #6B1A1A Ruin's bloodline
+export T_RUIN_SPIKE='\033[38;5;136m'     # #8B6914 Hemalurgic spike
+export T_RUIN_BRONZE='\033[38;5;130m'    # #7A4F35 Corroded bronze
+export T_RUIN_ASH='\033[38;5;236m'       # #3D2B1F Ashmount shadow
+
+# Scadrial — Preservation
+export T_PRES_MIST='\033[38;5;195m'      # #C8E8F5 Preservation mist
+export T_PRES_SILVER='\033[38;5;152m'    # #B0C4DE Frosted silver
+export T_PRES_GLACIAL='\033[38;5;74m'    # #5DA8CC Glacial teal
+export T_PRES_LAVENDER='\033[38;5;183m'  # #C3AEE8 Pale lavender
+export T_PRES_ATIUM='\033[38;5;222m'     # #E8D5A0 Atium pale gold
+
+# Spren
+export T_SPREN_HONOR='\033[38;5;39m'     # #00A8E8 Honorspren sky blue
+export T_SPREN_CRYPTIC='\033[38;5;176m'  # #DA70D6 Cryptic orchid
+export T_SPREN_CULTIVATION='\033[38;5;71m' # #3CB371 Cultivationspren green
+export T_SPREN_WILL='\033[38;5;177m'     # #E040FB Willshaper amethyst
+export T_SPREN_SIBLING='\033[38;5;214m'  # #FFAB40 Sibling crystal amber
+export T_SPREN_GLORY='\033[38;5;220m'    # #FFD700 Gloryspren gold
+export T_SPREN_ASH='\033[38;5;202m'      # #FF4500 Ashspren volcanic
+export T_SPREN_STORM='\033[38;5;66m'     # #607D8B Stormfather slate
+export T_SPREN_PEAK='\033[38;5;137m'     # #8B7355 Peakspren stone
+export T_SPREN_INK='\033[38;5;54m'       # #4B0082 Inkspren indigo
+export T_SPREN_HIGH='\033[38;5;230m'     # #F5F5DC Highspren bone
