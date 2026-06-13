@@ -60,8 +60,8 @@ export RUIN_SPIKE_TRANSLUCENT=0x998B6914
 # ──────────────────────────────────────────────
 export PRES_MIST=0xffC8E8F5                   # Preservation Mist — pale icy blue
 export PRES_MIST_TRANSLUCENT=0xaaC8E8F5
-export PRES_SILVER=0xffB0C4DE                 # Frosted silver of the Well
-export PRES_SILVER_TRANSLUCENT=0x99B0C4DE
+export PRES_SILVER=0xffA0AAB5                 # Frosted silver (darker)
+export PRES_SILVER_TRANSLUCENT=0x99A0AAB5
 export PRES_GLACIAL=0xff5DA8CC                # Glacial teal — deep Well of Ascension
 export PRES_GLACIAL_TRANSLUCENT=0xbb5DA8CC
 export PRES_LAVENDER=0xffC3AEE8               # Pale lavender — Preservation's calm
@@ -93,8 +93,8 @@ export SPREN_MIST=0xff90EE90                  # Pale mist-green, soft glow
 export SPREN_MIST_T=0xaa90EE90
 
 # Inkspren  (Elsecallers — Jasnah, logic & transition)
-export SPREN_INK=0xff4B0082                   # Deep indigo-ink, near black-violet
-export SPREN_INK_T=0xbb4B0082
+export SPREN_INK=0xff8A2BE2                   # Deep indigo-ink, bright blue-violet
+export SPREN_INK_T=0xbb8A2BE2
 
 # Highspren  (Skybreakers — Szeth, law & justice)
 export SPREN_HIGH=0xffF5F5DC                  # Pale bone/beige — cold law, no warmth
@@ -105,8 +105,8 @@ export SPREN_ASH=0xffFF4500                   # Volcanic orange-red, embers
 export SPREN_ASH_T=0xbbFF4500
 
 # Peakspren  (Stonewards — Taln, endurance & stone)
-export SPREN_PEAK=0xff8B7355                  # Warm stone-tan/brown
-export SPREN_PEAK_T=0x998B7355
+export SPREN_PEAK=0xffF4A460                  # Warm stone-tan/sandy-brown
+export SPREN_PEAK_T=0x99F4A460
 
 # Willshaper Spren  (Willshapers — Venli, freedom & flexibility)
 export SPREN_WILL=0xffE040FB                  # Electric amethyst / magenta-violet
