@@ -185,7 +185,7 @@ export NET_ACCENT=$PRES_GLACIAL
 export NET_ACCENT_T=$PRES_GLACIAL_TRANSLUCENT
 
 # Bluetooth — connected = Preservation silver, idle = WHITE (visible on dark bg)
-export BT_CONNECTED=$PRES_DEEP
+export BT_CONNECTED=$SPREN_SIBLING
 export BT_IDLE=$PRES_ATIUM                         # Was RUIN_MIST (invisible) — fixed to white
 
 # Battery — Preservation reserve
