@@ -19,7 +19,7 @@ mkdir -p "$MATCHED_DIR"
 
 # Supported image/video extensions
 SUPPORTED_EXTENSIONS=(
-    jpg jpeg png heic heif tif tiff gif
+    jpg jpeg png heic heif tif tiff gif webp
     mp4 mov m4v avi mkv webm
 )
 
