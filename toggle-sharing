@@ -1,0 +1,28 @@
+#!/bin/bash
+
+STATE="$HOME/.cache/toggle-sharing"
+
+mkdir -p "$HOME/.cache"
+
+if [ -f "$STATE" ]
+then
+
+  osascript -e 'quit app "NearDrop"' 2>/dev/null
+
+  osascript -e 'quit app "LocalSend"' 2>/dev/null
+
+  osascript -e 'quit app "AirDrop"' 2>/dev/null
+
+  rm "$STATE"
+
+else
+
+  open -a "NearDrop"
+
+  open -a "LocalSend"
+
+  open -a "AirDrop"
+
+  touch "$STATE"
+
+fi

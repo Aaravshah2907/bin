@@ -1,0 +1,124 @@
+#!/bin/bash
+
+DIALOG="/usr/local/bin/dialog"
+
+# ---------- SYSTEM ----------
+
+battery=$(pmset -g batt | grep -Eo '\d+%' | head -1)
+
+memory=$(memory_pressure | awk '/System-wide memory free percentage/ {print 100-$5 "%"}')
+
+cpu=$(top -l 1 | awk '/CPU usage/ {print int($3+$5)"%"}')
+
+disk=$(df -H / | awk 'NR==2 {print $5}')
+
+# ---------- CLUTTER ----------
+
+downloads=$(find ~/Downloads -mindepth 1 | wc -l | xargs)
+
+trash=$(find ~/.Trash -mindepth 1 | wc -l | xargs)
+
+recent=$(mdfind 'kMDItemFSContentChangeDate >= $time.today(-1)' | wc -l | xargs)
+
+# ---------- WORKSPACE ----------
+
+apps=$(osascript -e '
+tell application "System Events"
+count (application processes whose background only is false)
+end tell')
+
+windows=$(osascript -e '
+tell application "System Events"
+set c to 0
+repeat with p in application processes whose background only is false
+try
+set c to c + (count windows of p)
+end try
+end repeat
+return c
+end tell')
+
+spaces=$(yabai -m query --spaces | jq length)
+
+dnd=$(defaults -currentHost read ~/Library/Preferences/ByHost/com.apple.controlcenter.plist FocusModes 2>/dev/null && echo ON || echo OFF)
+
+if [ -f /tmp/radiant-now-playing.json ]
+then
+
+    media=$(jq -r '
+    if .data.running == true then
+        "\(.data.artist) • \(.data.title)"
+    else
+        "Nothing playing"
+    end
+    ' /tmp/radiant-now-playing.json)
+
+else
+
+    media="Unavailable"
+
+fi
+
+# ---------- SCORE ----------
+
+score=100
+
+(( downloads > 100 )) && score=$((score-10))
+
+(( trash > 20 )) && score=$((score-10))
+
+(( apps > 15 )) && score=$((score-10))
+
+(( windows > 30 )) && score=$((score-10))
+
+# ---------- SUGGESTION ----------
+
+suggestion="Everything looks healthy."
+
+if (( downloads > 100 ))
+then
+    suggestion="Downloads folder needs cleaning."
+
+elif (( trash > 20 ))
+then
+    suggestion="Trash is getting full."
+
+elif (( windows > 30 ))
+then
+    suggestion="You have many windows open."
+
+fi
+
+# ---------- DIALOG ----------
+
+"$DIALOG" \
+--title "🩺 Keybee Status ($score/100)" \
+--message "
+🔋 Battery: $battery
+
+🧠 Memory: $memory
+
+⚙️ CPU: $cpu
+
+💾 Disk: $disk
+
+📥 Downloads: $downloads
+
+🗑️ Trash: $trash
+
+🕘 Recent: $recent
+
+📱 Apps: $apps
+
+🪟 Windows: $windows
+
+🖥️ Spaces: $spaces
+
+🔕 DND: $dnd
+
+🎵 Media: $media
+
+💡 $suggestion
+" \
+--button1text "OK" \
+--ontop

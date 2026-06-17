@@ -1,0 +1,11 @@
+#!/bin/bash
+
+open -a "Brave Browser" --args --profile-directory="Profile 1"
+
+open -a "Obsidian"
+
+open -a "Visual Studio Code"
+
+open "/Users/aaravshah2975/Applications/Brave Browser Apps.localized/Codeforces.app"
+
+open -a "iTerm"

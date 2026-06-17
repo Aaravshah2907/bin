@@ -1,0 +1,84 @@
+#!/bin/bash
+
+STATE="$HOME/.cache/panic"
+
+mkdir -p "$HOME/.cache"
+
+if [ -f "$STATE" ]; then
+
+    # Restore apps
+
+    while IFS= read -r app
+    do
+
+        [ -z "$app" ] && continue
+
+        osascript <<EOF
+tell application "$app"
+activate
+end tell
+EOF
+
+    done < "$STATE"
+
+    rm "$STATE"
+
+    osascript -e 'display notification "Workspace restored" with title "Panic Mode"'
+
+else
+
+    # Save currently visible apps
+
+    osascript <<EOF | sed 's/, /\n/g' > "$STATE"
+
+tell application "System Events"
+
+set appNames to {}
+
+repeat with proc in application processes
+
+    if visible of proc is true then
+
+        set appName to name of proc
+
+        if appName is not "Finder" and appName is not "Dock" then
+
+            copy appName to end of appNames
+        end if
+
+    end if
+
+end repeat
+
+return appNames
+
+end tell
+
+EOF
+
+    # Hide saved apps
+
+    while IFS= read -r app
+do
+
+    [ -z "$app" ] && continue
+
+    osascript <<EOF
+
+tell application "System Events"
+
+    if exists application process "$app" then
+
+        set visible of application process "$app" to false
+
+    end if
+
+end tell
+
+EOF
+
+done < "$STATE"
+
+    osascript -e 'display notification "Panic mode enabled" with title "Panic Mode"'
+
+fi
