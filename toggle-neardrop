@@ -1,0 +1,6 @@
+#!/bin/bash
+if osascript -e 'application "NearDrop" is running' 2>/dev/null | grep -q "true"; then
+  osascript -e 'quit app "NearDrop"'
+else
+  open -a "NearDrop"
+fi

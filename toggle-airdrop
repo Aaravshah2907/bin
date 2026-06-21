@@ -1,0 +1,6 @@
+#!/bin/bash
+if osascript -e 'application "AirDrop" is running' 2>/dev/null | grep -q "true"; then
+  osascript -e 'quit app "AirDrop"'
+else
+  open -a "AirDrop"
+fi
