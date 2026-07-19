@@ -160,3 +160,19 @@ done < <(find "$ROOT_DIR" -type f -iname "*.json" -print0)
 echo -e "${SYL}---------------------------------------${NC}"
 echo -e "${HONOR}✨ Journey before destination!${NC} All Memories have been Soulcast and preserved."
 echo -e "${SYL}Processed: $processed | Errors: $errors${NC}"
+
+# WhatsApp/Ntfy alert with summary
+source "$HOME/.config/shell/functions.sh"
+SKIPPED=$((skipped_no_media + skipped_no_data))
+if [ "$errors" -gt 0 ]; then
+  alert "🖼️ Photo metadata merge finished with issues!
+Dir:       $ROOT_DIR
+✅ Fixed:   $processed files
+⚠️ Skipped: $SKIPPED files
+❌ Errors:  $errors files (check terminal for details)"
+else
+  alert "🖼️ Photo metadata merge complete!
+Dir:       $ROOT_DIR
+✅ Fixed:   $processed files
+⚠️ Skipped: $SKIPPED files (no matching media/data)"
+fi

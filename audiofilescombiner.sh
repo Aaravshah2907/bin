@@ -135,3 +135,14 @@ echo -e "${SYL}Title:        $TITLE_INPUT${NC}"
 echo -e "${SYL}Album:  $ALBUM_NAME${NC}"
 echo -e "${SYL}Author: $AUTHOR_NAME${NC}"
 echo -e "${SYL}------------------------------------------------${NC}"
+
+# WhatsApp/Ntfy alert with useful info
+FILE_COUNT="${#sorted_files[@]}"
+OUTPUT_SIZE=$(du -sh "$OUTPUT" 2>/dev/null | awk '{print $1}')
+source "$HOME/.config/shell/functions.sh"
+alert "📚 Audiobook binding complete!
+Title:  $TITLE_INPUT
+Author: $AUTHOR_NAME
+Tracks: $FILE_COUNT files merged
+Size:   $OUTPUT_SIZE
+Saved:  $TARGET_DIR/$OUTPUT"
